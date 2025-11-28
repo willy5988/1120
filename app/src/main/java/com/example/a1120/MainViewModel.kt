@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 
 class MainViewModel : ViewModel() {
-    private val screens = mutableStateListOf<@Composable () -> Unit>({ HomePageScreen(this) })
+    private val screens = mutableStateListOf<@Composable () -> Unit>({ HomePageScreen(this, null) })
     val screen get() = screens.lastOrNull()
 
     fun push(screen: @Composable () -> Unit) {

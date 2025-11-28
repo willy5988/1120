@@ -20,3 +20,12 @@ fun String.weatherToImage() = when (this) {
     "overcast" -> R.drawable.overcast
     else -> R.drawable.sunny
 }
+
+fun String.weatherToIcon() = when (this) {
+    "cloudy" -> R.drawable.cloudy2
+    "sunny" -> R.drawable.sunny2
+    "rain" -> R.drawable.rain2
+    "thunder" -> R.drawable.thunder2
+    "overcast" -> R.drawable.overcast2
+    else -> R.drawable.sunny2
+}

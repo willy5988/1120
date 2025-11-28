@@ -31,6 +31,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,21 +52,26 @@ import java.time.LocalTime
 fun CityListScreen(viewModel: MainViewModel) {
     val scrollState = rememberScrollState()
     var showMenu by remember { mutableStateOf(false) }
-    var temp by remember { mutableStateOf(true) }
     val context = LocalContext.current
-    val cityList = remember { Parse.cityList(context, "city_list.xml") }
-    val nowCity by remember { mutableStateOf(cityList.first { it.type == "current" }) }
+    var searchCity by remember { mutableStateOf("") }
+
+    var temp by remember { mutableStateOf(true) }
+    val cityListXml = remember { Parse.cityList(context, "city_list.xml") }
+    val nowCity by remember { mutableStateOf(cityListXml.first { it.type == "current" }) }
+    val cityList = remember { mutableStateListOf(nowCity) }
+
+
     val nowCityWeather by remember {
         mutableStateOf(
             Parse.weatherData(
                 context,
                 nowCity.fileName
             )
-        ).also { println(it) }
+        )
     }
     val nowDay by remember {
         mutableStateOf(nowCityWeather.tenDayForecast.also { println(it.size) }.first { it ->
-            LocalDate.now() == LocalDate.parse(it.date).also { println(it) }
+            LocalDate.now() == LocalDate.parse(it.date)
         })
     }
 
@@ -83,6 +89,8 @@ fun CityListScreen(viewModel: MainViewModel) {
             delay(10000)
         }
     }
+
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -96,8 +104,7 @@ fun CityListScreen(viewModel: MainViewModel) {
                         IconButton(
                             onClick = { showMenu = true } // 點擊時打開選單
                         ) {
-                            // 小建議：通常下拉選單會用 MoreVert (三個點)，
-                            // 但你想保留原本的 Menu (漢堡圖) 也可以
+                            // 小建議：通常下拉選單會用 MoreVert (三個點)
                             Icon(imageVector = Icons.Default.Menu, contentDescription = null)
                         }
 
@@ -166,17 +173,15 @@ fun CityListScreen(viewModel: MainViewModel) {
         ) {
             Text("天氣", fontSize = 30.sp)
             OutlinedTextField(
-                "",
-                {},
+                searchCity,
+                { searchCity = it },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("輸入城市地點來搜尋") },
                 trailingIcon = {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            null
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        null
+                    )
                 }
             )
 
@@ -202,14 +207,7 @@ fun CityListScreen(viewModel: MainViewModel) {
                             Text(nowCity.name, color = Color.White)
                             Spacer(Modifier.weight(1f))
                             Text(
-                                when (nowHour?.weather) {
-                                    "cloudy" -> "多雲"
-                                    "sunny" -> "晴天"
-                                    "rain" -> "下雨"
-                                    "thunder" -> "打雷"
-                                    "overcast" -> "陰天"
-                                    else -> "晴天"
-                                }, color = Color.White
+                                nowHour?.weather.toString().weekEnToCh(), color = Color.White
                             )
                         }
                         Spacer(Modifier.weight(1f))

@@ -22,6 +22,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -44,32 +49,51 @@ import com.example.a1120.ui.theme.Color7
 import com.example.a1120.ui.theme.DarkBlue
 import com.example.a1120.ui.theme.LightBlue
 import com.example.a1120.ui.theme.Orange
+import kotlinx.coroutines.delay
 import java.time.LocalDate
+import java.time.LocalTime
 
-fun weatherToIcon(a: String) = when (a) {
-    "cloudy" -> R.drawable.cloudy2
-    "sunny" -> R.drawable.sunny2
-    "rain" -> R.drawable.rain2
-    "thunder" -> R.drawable.thunder2
-    "overcast" -> R.drawable.overcast2
-    else -> R.drawable.sunny2
-}
 
 @Composable
 fun HomeScreen(
     viewModel: MainViewModel,
     nowCity: City,
-    nowCityWeather: WeatherData,
-    nowDay: Day,
-    nowHour: Hour
 ) {
-    val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
+    val nowCityWeather by remember {
+        mutableStateOf(
+            Parse.weatherData(
+                context,
+                nowCity.fileName
+            )
+        )
+//        ).also { println(it) }
+    }
+    val nowDay by remember {
+        mutableStateOf(nowCityWeather.tenDayForecast.first { it ->
+            LocalDate.now() == LocalDate.parse(it.date)
+        })
+    }
+
+
+    var nowHour by remember { mutableStateOf<Hour>(Hour("", "", "")) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            val hour = LocalTime.now().hour
+            nowCityWeather.hourlyForecast.forEach {
+                if (hour == it.time.take(2).toInt()) {
+                    nowHour = Hour(it.time, it.weather, it.temperature)
+                }
+            }
+            delay(10000)
+        }
+    }
 
     Box {
         Image(
             painter = painterResource(
-                weatherToImage(nowHour.weather)
+                nowHour.weather.weatherToImage()
             ),
             null,
             modifier = Modifier.fillMaxSize(),
@@ -119,7 +143,7 @@ fun HomeScreen(
                 ) {
                     nowCityWeather.hourlyForecast.forEach {
                         if (n >= 7) {
-                            println("return")
+//                            println("return")
                             return@Row
                         }
                         if (nowHour.time == it.time) {
@@ -241,7 +265,7 @@ fun HomeScreen(
                     ) {
 
                         a = 1
-                        println("true")
+//                        println("true")
                     }
 
 
@@ -252,14 +276,15 @@ fun HomeScreen(
                                 Spacer(Modifier.width(65.dp))
                             } else {
                                 Text(
-                                    weekEnToCh(LocalDate.parse(nowCityWeather.tenDayForecast[i].date).dayOfWeek.toString()),
+                                    LocalDate.parse(nowCityWeather.tenDayForecast[i].date).dayOfWeek.toString()
+                                        .weekEnToCh(),
                                     color = Color.White
                                 )
                                 Spacer(Modifier.width(50.dp))
                             }
                             a++
                             Icon(
-                                painter = painterResource(weatherToIcon(nowCityWeather.tenDayForecast[i].weatherCondition)),
+                                painter = painterResource(nowCityWeather.tenDayForecast[i].weatherCondition.weatherToIcon()),
                                 null,
                                 tint = Color.White
                             )
@@ -298,7 +323,7 @@ fun HomeScreen(
                                     strokeWidth = 10f,
                                     cap = StrokeCap.Round
                                 )
-                                println(min.toString() + " " + lineStart)
+//                                println(min.toString() + " " + lineStart)
                             }
                             Text("$high°", color = Color.White)
 
@@ -418,26 +443,4 @@ fun HomeScreen(
 
         }
     }
-}
-
-
-fun weekEnToCh(week: String) = when (week) {
-    "SATURDAY" -> "星期六"
-    "SUNDAY" -> "星期日"
-    "FRIDAY" -> "星期五"
-    "THURSDAY" -> "星其四"
-    "WEDNESDAY" -> "星期三"
-    "TUESDAY" -> "星期二"
-    "MONDAY" -> "星期一"
-    else -> "星期一"
-
-}
-
-fun weatherToImage(a: String) = when (a) {
-    "cloudy" -> R.drawable.cloudy
-    "sunny" -> R.drawable.sunny
-    "rain" -> R.drawable.rain
-    "thunder" -> R.drawable.thunder
-    "overcast" -> R.drawable.overcast
-    else -> R.drawable.sunny
 }
