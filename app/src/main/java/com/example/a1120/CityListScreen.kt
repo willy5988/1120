@@ -188,7 +188,7 @@ fun CityListScreen(viewModel: MainViewModel) {
             ) {
                 Box() {
                     Image(
-                        painter = painterResource(WhenFun.weatherToImage(nowHour?.weather.toString())),
+                        painter = painterResource(nowHour?.weather.toString().weatherToImage()),
                         null,
                         modifier = Modifier
                             .fillMaxSize(),

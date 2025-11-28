@@ -22,3 +22,12 @@ object WhenFun {
         else -> R.drawable.sunny
     }
 }
+
+fun String.weatherToImage() = when (this) {
+    "cloudy" -> R.drawable.cloudy
+    "sunny" -> R.drawable.sunny
+    "rain" -> R.drawable.rain
+    "thunder" -> R.drawable.thunder
+    "overcast" -> R.drawable.overcast
+    else -> R.drawable.sunny
+}
