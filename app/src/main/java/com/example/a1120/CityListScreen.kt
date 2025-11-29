@@ -75,7 +75,7 @@ fun CityListScreen(viewModel: MainViewModel) {
         })
     }
     var nowHour by remember { mutableStateOf<Hour?>(null) }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(nowCityWeather) {
 
         while (true) {
             val hour = LocalTime.now().hour
@@ -127,7 +127,10 @@ fun CityListScreen(viewModel: MainViewModel) {
                             // 第二個選項：設定
                             DropdownMenuItem(
                                 text = { Text("設定") },
-                                onClick = { showMenu = false },
+                                onClick = {
+                                    showMenu = false
+                                    viewModel.push { SetScreen(viewModel) }
+                                },
 
                                 trailingIcon = {
                                     Icon(
@@ -188,7 +191,7 @@ fun CityListScreen(viewModel: MainViewModel) {
                     context,
                     city.fileName
                 )
-                nowDay = nowCityWeather.tenDayForecast.also { println(it.size) }.first { it ->
+                nowDay = nowCityWeather.tenDayForecast.first { it ->
                     LocalDate.now() == LocalDate.parse(it.date)
                 }
                 Card(
@@ -200,7 +203,14 @@ fun CityListScreen(viewModel: MainViewModel) {
 
 
                     Box() {
+                        val hour = LocalTime.now().hour
+                        nowCityWeather.hourlyForecast.forEach {
+                            if (hour == it.time.take(2).toInt()) {
+                                nowHour = Hour(it.time, it.weather, it.temperature)
+                            }
+                        }
                         Image(
+
                             painter = painterResource(nowHour?.weather.toString().weatherToImage()),
                             null,
                             modifier = Modifier
