@@ -23,9 +23,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +46,7 @@ fun HomePageScreen(viewModel: MainViewModel, takeCityList: List<City>?) {
     val nowCity by remember { mutableStateOf(cityListXml.first { it.type == "current" }) }
     val cityList = remember { takeCityList?.toMutableStateList() ?: mutableStateListOf(nowCity) }
     val pagerState = rememberPagerState(pageCount = { cityList.size })
+    var pagerNowState by remember { mutableIntStateOf(0) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -71,15 +74,17 @@ fun HomePageScreen(viewModel: MainViewModel, takeCityList: List<City>?) {
                             painter = painterResource(R.drawable.baseline_location_on_24),
                             contentDescription = null,
                             modifier = Modifier.size(15.dp),
-                            tint = Color.Black
+                            tint = if (pagerNowState == 0) Color.Black else Color.LightGray
+
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        for (i in 2..cityList.size.also { println(it) }) {
+                        for (i in 1..<cityList.size) {
                             Icon(
                                 painter = painterResource(R.drawable.baseline_circle_24),
                                 contentDescription = null,
                                 modifier = Modifier.size(15.dp),
-                                tint = Color.LightGray
+                                tint = if (pagerNowState == i) Color.Black else Color.LightGray
+
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                         }
@@ -104,12 +109,9 @@ fun HomePageScreen(viewModel: MainViewModel, takeCityList: List<City>?) {
                 HomeScreen(
                     viewModel,
                     cityList[nowPager],
-                    if (nowPager == 0) {
-                        true
-                    } else {
-                        false
-                    }
+                    nowPager == 0
                 )
+                pagerNowState = nowPager
 
             }
 
