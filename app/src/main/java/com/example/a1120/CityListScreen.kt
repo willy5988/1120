@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -37,6 +38,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,13 +60,21 @@ fun CityListScreen(viewModel: MainViewModel) {
     val verticalScrollState = rememberScrollState()
     var isSearch by remember { mutableStateOf(false) }
 
-    var temp by remember { mutableStateOf(true) }
+
     val cityListXml = remember { Parse.cityList(context, "city_list.xml") }
+    val prefs = cityListXml.filter {
+        Prefs.takeCity(context, it.name)
+    }
     val nowCity by remember { mutableStateOf(cityListXml.first { it.type == "current" }) }
-    val cityList =
-        remember { mutableStateListOf(nowCity, City(null, "台北市", "Taipei City", "taipei.xml")) }
-    var searchCityList = cityListXml.map {
-        City(it.type, it.name, it.nameEn, it.fileName)
+    val cityList = remember {
+        if (prefs.isNotEmpty()) {
+            prefs.toMutableStateList()
+        } else {
+            mutableStateListOf(nowCity)
+        }
+    }
+    var searchCityList by remember {
+        mutableStateOf(cityListXml)
     }
 
     var nowCityWeather by remember {
@@ -155,7 +165,7 @@ fun CityListScreen(viewModel: MainViewModel) {
                                 text = { Text("攝氏 °C") },
                                 onClick = {
                                     showMenu = false
-                                    temp = true
+                                    Prefs.rememberTemp(context, true)
                                 }
                             )
 
@@ -164,7 +174,7 @@ fun CityListScreen(viewModel: MainViewModel) {
                                 text = { Text("華氏 °F") },
                                 onClick = {
                                     showMenu = false
-                                    temp = false
+                                    Prefs.rememberTemp(context, false)
                                 }
                             )
                         }
@@ -181,20 +191,22 @@ fun CityListScreen(viewModel: MainViewModel) {
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text("天氣", fontSize = 30.sp)
-            OutlinedTextField(
+            OutlinedTextField(//搜尋框
                 searchCity,
-                {
-                    searchCity = it
-                    isSearch = searchCity.isNotBlank()
+                { s ->
+                    searchCity = s
+                    isSearch = s.isNotBlank()
 
                     searchCityList = if (isSearch) {
-                        cityListXml.map { city ->
-                            City(city.type, city.name, city.nameEn, city.fileName)
-                        }
+                        cityListXml
+                            .filter { it.name.contains(searchCity) }
+                            .map { city ->
+                                City(city.type, city.name, city.nameEn, city.fileName)
+                            }.toMutableStateList()
                     } else {
-                        cityListXml.toList()
+                        cityListXml.toMutableStateList()
                     }
-                    println(searchCityList)
+
                 },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("輸入城市地點來搜尋") },
@@ -203,12 +215,10 @@ fun CityListScreen(viewModel: MainViewModel) {
                         imageVector = Icons.Default.Search,
                         null
                     )
-                }
+                },
+                singleLine = true
             )
-            if (isSearch) {
-                if (searchCityList.isEmpty()) {
-                    return@Column
-                }
+            if (isSearch) { //搜尋時的列表
                 searchCityList.forEachIndexed { i, city ->
                     nowCityWeather = Parse.weatherData(
                         context,
@@ -217,87 +227,122 @@ fun CityListScreen(viewModel: MainViewModel) {
                     nowDay = nowCityWeather.tenDayForecast.first {
                         LocalDate.now() == LocalDate.parse(it.date)
                     }
-                    Card(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(125.dp)
-                            .clickable { viewModel.push { HomePageScreen(viewModel, cityList) } }
+                    Row(
+                        modifier = Modifier.fillMaxSize()
                     ) {
-
-
-                        Box() {
-                            val hour = LocalTime.now().hour
-                            nowCityWeather.hourlyForecast.forEach {
-                                if (hour == it.time.take(2).toInt()) {
-                                    nowHour = Hour(it.time, it.weather, it.temperature)
-                                }
-                            }
-                            Image(
-
-                                painter = painterResource(
-                                    nowHour?.weather.toString().weatherToImage()
-                                ),
-                                null,
-                                modifier = Modifier
-                                    .fillMaxSize(),
-                                contentScale = ContentScale.Crop,
-                            )
-                            Row(
-                                Modifier.padding(10.dp)
-                            ) {
-                                Column {
-                                    if (i == 0) {
-                                        Text("當前位置", color = Color.White)
-                                        Text(nowCity.name, color = Color.White)
-
-                                    } else {
-                                        Text(city.name, color = Color.White)
-                                        Text(
-                                            nowHour?.time?.take(2).toString() + ":00",
-                                            color = Color.White
+                        Card(
+                            Modifier
+                                .fillMaxWidth(.8f)
+                                .height(125.dp)
+                                .clickable {
+                                    viewModel.push {
+                                        HomePageScreen(
+                                            viewModel,
+                                            cityList
                                         )
-
                                     }
-
-
-
-                                    Spacer(Modifier.weight(1f))
-                                    Text(
-                                        nowHour?.weather.toString().weekEnToCh(),
-                                        color = Color.White
-                                    )
                                 }
-                                Spacer(Modifier.weight(1f))
+                        ) {
+
+
+                            Box() {
                                 val hour = LocalTime.now().hour
                                 nowCityWeather.hourlyForecast.forEach {
                                     if (hour == it.time.take(2).toInt()) {
                                         nowHour = Hour(it.time, it.weather, it.temperature)
                                     }
                                 }
-                                val nowTemp = nowHour?.temperature?.filter { it.isDigit() }?.toInt()
-                                Column {
-                                    if (temp) {
+                                Image(
+
+                                    painter = painterResource(
+                                        nowHour?.weather.toString().weatherToImage()
+                                    ),
+                                    null,
+                                    modifier = Modifier
+                                        .fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                )
+                                Row(
+                                    Modifier.padding(10.dp)
+                                ) {
+                                    Column {
+                                        if (i == 0) {
+                                            Text("當前位置", color = Color.White)
+                                            Text(nowCity.name, color = Color.White)
+
+                                        } else {
+                                            Text(city.name, color = Color.White)
+                                            Text(
+                                                nowHour?.time?.take(2).toString() + ":00",
+                                                color = Color.White
+                                            )
+
+                                        }
+
+
+
+                                        Spacer(Modifier.weight(1f))
                                         Text(
-                                            fontSize = 60.sp,
-                                            color = Color.White,
-                                            text = nowTemp.toString() + "°C"
-                                        )
-                                    } else {
-                                        val fTemp = (nowTemp ?: (1 * 9 / 5)) + 32
-                                        Text(
-                                            fontSize = 60.sp,
-                                            color = Color.White,
-                                            text = "$fTemp°F"
+                                            nowHour?.weather.toString().weekEnToCh(),
+                                            color = Color.White
                                         )
                                     }
                                     Spacer(Modifier.weight(1f))
-                                    Text(
-                                        "H:" + nowDay.highTemperature + " " + "L:" + nowDay.lowTemperature,
-                                        color = Color.White
-                                    )
+                                    val hour = LocalTime.now().hour
+                                    nowCityWeather.hourlyForecast.forEach {
+                                        if (hour == it.time.take(2).toInt()) {
+                                            nowHour = Hour(it.time, it.weather, it.temperature)
+                                        }
+                                    }
+                                    val nowTemp =
+                                        nowHour?.temperature?.filter { it.isDigit() }?.toInt()
+                                    Column {
+                                        if (Prefs.takeTemp(context)) {
+                                            Text(
+                                                fontSize = 60.sp,
+                                                color = Color.White,
+                                                text = nowTemp.toString() + "°C"
+                                            )
+                                            Text(
+                                                "H:" + nowDay.highTemperature + " " + "L:" + nowDay.lowTemperature,
+                                                color = Color.White
+                                            )
+                                        } else {
+                                            val fTemp = (nowTemp ?: (1 * 9 / 5)) + 32
+                                            Text(
+                                                fontSize = 60.sp,
+                                                color = Color.White,
+                                                text = "$fTemp°F"
+                                            )
+                                            val fTempH =
+                                                (nowDay.highTemperature.filter { it.isDigit() }
+                                                    .toInt() * 9 / 5) + 32
+                                            val fTempL =
+                                                (nowDay.lowTemperature.filter { it.isDigit() }
+                                                    .toInt() * 9 / 5) + 32
+
+                                            Text(
+                                                "H:$fTempH°F L:$fTempL°F",
+                                                color = Color.White
+                                            )
+                                        }
+                                        Spacer(Modifier.weight(1f))
+
+                                    }
                                 }
                             }
                         }
+
+                        Button(
+                            {
+                                if (!cityList.any { it.name == city.name }) {
+                                    cityList.add(city)
+                                    Prefs.rememberCity(context, city.name)
+                                }
+                            },
+
+                            modifier = Modifier.fillMaxSize()
+                        ) { Text("+") }
 
 
                     }
@@ -371,11 +416,15 @@ fun CityListScreen(viewModel: MainViewModel) {
                                 }
                                 val nowTemp = nowHour?.temperature?.filter { it.isDigit() }?.toInt()
                                 Column {
-                                    if (temp) {
+                                    if (Prefs.takeTemp(context)) {
                                         Text(
                                             fontSize = 60.sp,
                                             color = Color.White,
                                             text = nowTemp.toString() + "°C"
+                                        )
+                                        Text(
+                                            "H:" + nowDay.highTemperature + " " + "L:" + nowDay.lowTemperature,
+                                            color = Color.White
                                         )
                                     } else {
                                         val fTemp = (nowTemp ?: (1 * 9 / 5)) + 32
@@ -384,23 +433,26 @@ fun CityListScreen(viewModel: MainViewModel) {
                                             color = Color.White,
                                             text = "$fTemp°F"
                                         )
+                                        val fTempH =
+                                            (nowDay.highTemperature.filter { it.isDigit() }
+                                                .toInt() * 9 / 5) + 32
+                                        val fTempL =
+                                            (nowDay.lowTemperature.filter { it.isDigit() }
+                                                .toInt() * 9 / 5) + 32
+
+                                        Text(
+                                            "H:$fTempH°F L:$fTempL°F",
+                                            color = Color.White
+                                        )
                                     }
                                     Spacer(Modifier.weight(1f))
-                                    Text(
-                                        "H:" + nowDay.highTemperature + " " + "L:" + nowDay.lowTemperature,
-                                        color = Color.White
-                                    )
                                 }
                             }
                         }
-
-
                     }
-
                 }
-            }
-
-
+            }//原本的列表
         }
     }
 }
+

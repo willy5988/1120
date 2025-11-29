@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -43,10 +44,21 @@ fun HomePageScreen(viewModel: MainViewModel, takeCityList: List<City>?) {
 
     val context = LocalContext.current
     val cityListXml = remember { Parse.cityList(context, "city_list.xml") }
+    val prefs = cityListXml.filter { Prefs.takeCity(context, it.name) }
     val nowCity by remember { mutableStateOf(cityListXml.first { it.type == "current" }) }
-    val cityList = remember { takeCityList?.toMutableStateList() ?: mutableStateListOf(nowCity) }
+    val cityList = remember {
+        if (prefs.isNotEmpty()) {
+            prefs.toMutableStateList()
+        } else {
+            takeCityList?.toMutableStateList() ?: mutableStateListOf(nowCity)
+        }
+
+    }
     val pagerState = rememberPagerState(pageCount = { cityList.size })
     var pagerNowState by remember { mutableIntStateOf(0) }
+    LaunchedEffect(pagerState.currentPage) {
+        pagerNowState = pagerState.currentPage
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -111,7 +123,6 @@ fun HomePageScreen(viewModel: MainViewModel, takeCityList: List<City>?) {
                     cityList[nowPager],
                     nowPager == 0
                 )
-                pagerNowState = nowPager
 
             }
 
