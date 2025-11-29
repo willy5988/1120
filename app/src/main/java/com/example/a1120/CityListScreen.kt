@@ -1,6 +1,7 @@
 package com.example.a1120
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
@@ -50,7 +50,6 @@ import java.time.LocalTime
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CityListScreen(viewModel: MainViewModel) {
-    val scrollState = rememberScrollState()
     var showMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var searchCity by remember { mutableStateOf("") }
@@ -62,21 +61,22 @@ fun CityListScreen(viewModel: MainViewModel) {
         remember { mutableStateListOf(nowCity, City(null, "台北市", "Taipei City", "taipei.xml")) }
 
 
-    val nowCityWeather by remember {
+    var nowCityWeather by remember {
         mutableStateOf(
             Parse.weatherData(
                 context,
-                nowCity.fileName
+                cityList[0].fileName
             )
         )
     }
-    val nowDay by remember {
+    var nowDay by remember {
         mutableStateOf(nowCityWeather.tenDayForecast.also { println(it.size) }.first { it ->
             LocalDate.now() == LocalDate.parse(it.date)
         })
     }
     var nowHour by remember { mutableStateOf<Hour?>(null) }
     LaunchedEffect(Unit) {
+
         while (true) {
             val hour = LocalTime.now().hour
             nowCityWeather.hourlyForecast.forEach {
@@ -85,7 +85,7 @@ fun CityListScreen(viewModel: MainViewModel) {
                 }
             }
 
-            delay(10000)
+            delay(60_000L)
         }
     }
 
@@ -183,12 +183,19 @@ fun CityListScreen(viewModel: MainViewModel) {
                     )
                 }
             )
-            for (i in 1..cityList.size) {
+            cityList.forEachIndexed { i, city ->
+                nowCityWeather = Parse.weatherData(
+                    context,
+                    city.fileName
+                )
+                nowDay = nowCityWeather.tenDayForecast.also { println(it.size) }.first { it ->
+                    LocalDate.now() == LocalDate.parse(it.date)
+                }
                 Card(
                     Modifier
                         .fillMaxWidth()
                         .height(125.dp)
-//                    .clickable { viewModel.push { HomeScreen(viewModel) } }
+                        .clickable { viewModel.push { HomePageScreen(viewModel, cityList) } }
                 ) {
 
 
@@ -204,14 +211,33 @@ fun CityListScreen(viewModel: MainViewModel) {
                             Modifier.padding(10.dp)
                         ) {
                             Column {
-                                Text("當前位置", color = Color.White)
-                                Text(nowCity.name, color = Color.White)
+                                if (i == 0) {
+                                    Text("當前位置", color = Color.White)
+                                    Text(nowCity.name, color = Color.White)
+
+                                } else {
+                                    Text(cityList[i].name, color = Color.White)
+                                    Text(
+                                        nowHour?.time?.take(2).toString() + ":00",
+                                        color = Color.White
+                                    )
+
+                                }
+
+
+
                                 Spacer(Modifier.weight(1f))
                                 Text(
                                     nowHour?.weather.toString().weekEnToCh(), color = Color.White
                                 )
                             }
                             Spacer(Modifier.weight(1f))
+                            val hour = LocalTime.now().hour
+                            nowCityWeather.hourlyForecast.forEach {
+                                if (hour == it.time.take(2).toInt()) {
+                                    nowHour = Hour(it.time, it.weather, it.temperature)
+                                }
+                            }
                             val nowTemp = nowHour?.temperature?.filter { it.isDigit() }?.toInt()
                             Column {
                                 if (temp) {
@@ -233,7 +259,6 @@ fun CityListScreen(viewModel: MainViewModel) {
                                     "H:" + nowDay.highTemperature + " " + "L:" + nowDay.lowTemperature,
                                     color = Color.White
                                 )
-                                println(nowHour?.temperature)
                             }
                         }
                     }

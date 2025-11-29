@@ -104,6 +104,11 @@ fun HomePageScreen(viewModel: MainViewModel, takeCityList: List<City>?) {
                 HomeScreen(
                     viewModel,
                     cityList[nowPager],
+                    if (nowPager == 0) {
+                        true
+                    } else {
+                        false
+                    }
                 )
 
             }
