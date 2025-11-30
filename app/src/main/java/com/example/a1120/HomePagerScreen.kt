@@ -119,7 +119,6 @@ fun HomePageScreen(viewModel: MainViewModel, takeCityList: List<City>?) {
         ) {
             HorizontalPager(pagerState) { nowPager: Int ->
                 HomeScreen(
-                    viewModel,
                     cityList[nowPager],
                     nowPager == 0
                 )

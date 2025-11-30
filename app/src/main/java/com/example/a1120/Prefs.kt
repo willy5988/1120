@@ -29,9 +29,15 @@ object Prefs {
         return prefs.getBoolean("temp", true) // 預設攝氏
     }
 
-//    fun rememberLanguage(context: Context){
-//        val prefs = context.getSharedPreferences("language",Context.MODE_PRIVATE)
-//
-//    }
+    fun rememberLanguage(context: Context, nowLanguage: Boolean) {
+        val prefs = context.getSharedPreferences("language", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("language", nowLanguage).apply()
+    }
+
+    fun takeLanguage(context: Context): Boolean {
+        val prefs = context.getSharedPreferences("language", Context.MODE_PRIVATE)
+        return prefs.getBoolean("language", true)//Chinese  false = En
+    }
+
 
 }

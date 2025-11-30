@@ -60,6 +60,8 @@ fun CityListScreen(viewModel: MainViewModel) {
     val verticalScrollState = rememberScrollState()
     var isSearch by remember { mutableStateOf(false) }
 
+    val chOrEn by remember { mutableStateOf(Prefs.takeLanguage(context)) }
+
 
     val cityListXml = remember { Parse.cityList(context, "city_list.xml") }
     val prefs = cityListXml.filter {
@@ -130,7 +132,15 @@ fun CityListScreen(viewModel: MainViewModel) {
                         ) {
                             // 第一個選項：編輯列表
                             DropdownMenuItem(
-                                text = { Text("編輯列表") },
+                                text = {
+                                    Text(
+                                        changeLanguage(
+                                            chOrEn,
+                                            "編輯列表",
+                                            "edit"
+                                        ),
+                                    )
+                                },
                                 onClick = { showMenu = false },
                                 trailingIcon = {
                                     Icon(
@@ -142,10 +152,18 @@ fun CityListScreen(viewModel: MainViewModel) {
 
                             // 第二個選項：設定
                             DropdownMenuItem(
-                                text = { Text("設定") },
+                                text = {
+                                    Text(
+                                        changeLanguage(
+                                            chOrEn,
+                                            "設定",
+                                            "setting"
+                                        ),
+                                    )
+                                },
                                 onClick = {
                                     showMenu = false
-                                    viewModel.push { SetScreen(viewModel) }
+                                    viewModel.push { SettingScreen(viewModel) }
                                 },
 
                                 trailingIcon = {
@@ -162,7 +180,15 @@ fun CityListScreen(viewModel: MainViewModel) {
 
                             // 第三個選項：攝氏
                             DropdownMenuItem(
-                                text = { Text("攝氏 °C") },
+                                text = {
+                                    Text(
+                                        changeLanguage(
+                                            chOrEn,
+                                            "攝氏",
+                                            "°C"
+                                        )
+                                    )
+                                },
                                 onClick = {
                                     showMenu = false
                                     Prefs.rememberTemp(context, true)
@@ -171,7 +197,15 @@ fun CityListScreen(viewModel: MainViewModel) {
 
                             // 第四個選項：華氏
                             DropdownMenuItem(
-                                text = { Text("華氏 °F") },
+                                text = {
+                                    Text(
+                                        changeLanguage(
+                                            chOrEn,
+                                            "華氏",
+                                            "°F"
+                                        )
+                                    )
+                                },
                                 onClick = {
                                     showMenu = false
                                     Prefs.rememberTemp(context, false)
@@ -190,7 +224,13 @@ fun CityListScreen(viewModel: MainViewModel) {
                 .verticalScroll(verticalScrollState),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("天氣", fontSize = 30.sp)
+            Text(
+                changeLanguage(
+                    chOrEn,
+                    "天氣",
+                    "Weather"
+                ), fontSize = 30.sp
+            )
             OutlinedTextField(//搜尋框
                 searchCity,
                 { s ->
@@ -209,7 +249,15 @@ fun CityListScreen(viewModel: MainViewModel) {
 
                 },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("輸入城市地點來搜尋") },
+                label = {
+                    Text(
+                        changeLanguage(
+                            chOrEn,
+                            "輸入城市地點來搜尋",
+                            "Input city to search"
+                        )
+                    )
+                },
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
@@ -267,25 +315,32 @@ fun CityListScreen(viewModel: MainViewModel) {
                                 ) {
                                     Column {
                                         if (i == 0) {
-                                            Text("當前位置", color = Color.White)
-                                            Text(nowCity.name, color = Color.White)
+                                            Text(
+                                                changeLanguage(chOrEn, "當前位置", "Local"),
+                                                color = Color.White
+                                            )
+                                            Text(
+                                                changeLanguage(
+                                                    chOrEn,
+                                                    nowCity.name,
+                                                    nowCity.nameEn
+                                                ), color = Color.White
+                                            )
 
                                         } else {
-                                            Text(city.name, color = Color.White)
+                                            Text(
+                                                changeLanguage(
+                                                    chOrEn,
+                                                    nowCity.name,
+                                                    nowCity.nameEn
+                                                ), color = Color.White
+                                            )
                                             Text(
                                                 nowHour?.time?.take(2).toString() + ":00",
                                                 color = Color.White
                                             )
 
                                         }
-
-
-
-                                        Spacer(Modifier.weight(1f))
-                                        Text(
-                                            nowHour?.weather.toString().weekEnToCh(),
-                                            color = Color.White
-                                        )
                                     }
                                     Spacer(Modifier.weight(1f))
                                     val hour = LocalTime.now().hour
@@ -387,25 +442,32 @@ fun CityListScreen(viewModel: MainViewModel) {
                             ) {
                                 Column {
                                     if (i == 0) {
-                                        Text("當前位置", color = Color.White)
-                                        Text(nowCity.name, color = Color.White)
+                                        Text(
+                                            changeLanguage(chOrEn, "當前位置", "Local"),
+                                            color = Color.White
+                                        )
+                                        Text(
+                                            changeLanguage(
+                                                chOrEn,
+                                                nowCity.name,
+                                                nowCity.nameEn
+                                            ), color = Color.White
+                                        )
 
                                     } else {
-                                        Text(cityList[i].name, color = Color.White)
+                                        Text(
+                                            changeLanguage(
+                                                chOrEn,
+                                                cityList[i].name,
+                                                cityList[i].nameEn
+                                            ), color = Color.White
+                                        )
                                         Text(
                                             nowHour?.time?.take(2).toString() + ":00",
                                             color = Color.White
                                         )
 
                                     }
-
-
-
-                                    Spacer(Modifier.weight(1f))
-                                    Text(
-                                        nowHour?.weather.toString().weekEnToCh(),
-                                        color = Color.White
-                                    )
                                 }
                                 Spacer(Modifier.weight(1f))
                                 val hour = LocalTime.now().hour
@@ -455,4 +517,14 @@ fun CityListScreen(viewModel: MainViewModel) {
         }
     }
 }
+
+
+fun changeLanguage(b: Boolean, c: String, e: String): String {
+    if (b) {
+        return c
+    }
+    return e
+}
+
+
 

@@ -57,7 +57,6 @@ import java.time.LocalTime
 
 @Composable
 fun HomeScreen(
-    viewModel: MainViewModel,
     nowCity: City,
     isLocal: Boolean,
 ) {
@@ -118,14 +117,7 @@ fun HomeScreen(
             Text(nowCity.name, color = Color.White)
             Text(nowHour.temperature, color = Color.White, fontSize = 50.sp)
             Text(
-                when (nowHour.weather) {
-                    "cloudy" -> "多雲"
-                    "sunny" -> "晴天"
-                    "rain" -> "下雨"
-                    "thunder" -> "打雷"
-                    "overcast" -> "陰天"
-                    else -> "晴天"
-                },
+                nowHour.weather.weekEnToCh(),
                 color = Color.White
             )
             Text(
@@ -145,7 +137,7 @@ fun HomeScreen(
                 Column(
                     Modifier.padding(5.dp)
                 ) {
-                    var n = 1
+                    var n = 0
                     Row(
                         modifier = Modifier
                             .padding(5.dp)
@@ -154,7 +146,7 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         nowCityWeather.hourlyForecast.forEach {
-                            if (nowHour.time == it.time) {
+                            if (nowHour.time == it.time.also { println(it) }) {
 
 
                                 Column(
@@ -163,14 +155,7 @@ fun HomeScreen(
                                     Text("現在", color = Color.White)
                                     Icon(
                                         painter = painterResource(
-                                            when (it.weather) {
-                                                "cloudy" -> R.drawable.cloudy2
-                                                "sunny" -> R.drawable.sunny2
-                                                "rain" -> R.drawable.rain2
-                                                "thunder" -> R.drawable.thunder2
-                                                "overcast" -> R.drawable.overcast2
-                                                else -> R.drawable.sunny2
-                                            }
+                                            it.weather.weatherToIcon()
                                         ),
                                         null,
                                         tint = Color.White
@@ -178,22 +163,16 @@ fun HomeScreen(
                                     Text(it.temperature, color = Color.White)
                                 }
                                 n++
+                                return@forEach
                             }
-                            if (n > 1) {
+                            if (n >= 1) {
                                 Column(
                                     verticalArrangement = Arrangement.spacedBy(5.dp)
                                 ) {
                                     Text(it.time.take(2), color = Color.White)
                                     Icon(
                                         painter = painterResource(
-                                            when (it.weather) {
-                                                "cloudy" -> R.drawable.cloudy2
-                                                "sunny" -> R.drawable.sunny2
-                                                "rain" -> R.drawable.rain2
-                                                "thunder" -> R.drawable.thunder2
-                                                "overcast" -> R.drawable.overcast2
-                                                else -> R.drawable.sunny2
-                                            }
+                                            it.weather.weatherToIcon()
                                         ),
                                         null,
                                         tint = Color.White
@@ -218,7 +197,7 @@ fun HomeScreen(
                     containerColor = Color.White.copy(alpha = 0.3f)
                 ),
                 modifier = Modifier
-                    .size(350.dp, 200.dp)
+                    .size(350.dp, 290.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(10.dp)
@@ -230,7 +209,7 @@ fun HomeScreen(
                             null,
                             tint = Color.White
                         )
-                        Text("10天內天氣預報", color = Color.White)
+                        Text("十天內天氣預報", color = Color.White)
                     }
                     var a = 0
                     HorizontalDivider(thickness = 2.dp)
@@ -283,18 +262,18 @@ fun HomeScreen(
                         }
 
 
-                        if (a in 1..7) {
+                        if (a in 1..10) {
                             Row {
                                 if (a == 1) {
                                     Text("今天", color = Color.White)
                                     Spacer(Modifier.width(65.dp))
                                 } else {
                                     Text(
-                                        LocalDate.parse(nowCityWeather.tenDayForecast[i].date).dayOfWeek.toString()
-                                            .weekEnToCh(),
+                                        LocalDate.parse(nowCityWeather.tenDayForecast[i].date)
+                                            .toString(),
                                         color = Color.White
                                     )
-                                    Spacer(Modifier.width(50.dp))
+                                    Spacer(Modifier.width(10.dp))
                                 }
                                 a++
                                 Icon(
@@ -318,7 +297,7 @@ fun HomeScreen(
                                 } else if (low.toInt() > 15) {
                                     lineColor = listOf(Color.Yellow, Orange, Color.Red)
                                 } else if (high.toInt() > 15 && low.toInt() < 15) {
-                                    lineColor = listOf(Color.Yellow)
+                                    lineColor = listOf(Color.Yellow, Color.Yellow)
                                 }
                                 Canvas(modifier = Modifier.size(100.dp, 10.dp)) {
                                     drawLine(
@@ -337,7 +316,6 @@ fun HomeScreen(
                                         strokeWidth = 10f,
                                         cap = StrokeCap.Round
                                     )
-//                                println(min.toString() + " " + lineStart)
                                 }
                                 Text("$high°", color = Color.White)
 
