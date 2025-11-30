@@ -77,7 +77,7 @@ fun HomePageScreen(viewModel: MainViewModel, takeCityList: List<City>?) {
                 ) {
 
                     // --- 左邊：地圖按鈕 ---
-                    IconButton(onClick = { /* 點擊動作 */ }) {
+                    IconButton(onClick = { viewModel.push { MapScreen(viewModel) } }) {
                         Icon(Icons.Default.Place, null)
                     }
 

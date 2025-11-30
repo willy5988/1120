@@ -29,3 +29,12 @@ fun String.weatherToIcon() = when (this) {
     "overcast" -> R.drawable.overcast2
     else -> R.drawable.sunny2
 }
+
+fun String.weatherToCh() = when (this) {
+    "cloudy" -> "多雲"
+    "sunny" -> "晴天"
+    "rain" -> "雨天"
+    "thunder" -> "打雷"
+    "overcast" -> "陰天"
+    else -> "晴天"
+}

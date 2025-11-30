@@ -4,10 +4,15 @@ import android.content.Context
 import androidx.core.content.edit
 
 object Prefs {
-    fun rememberCity(context: Context, city: String) {
+    fun rememberCity(context: Context, city: String, boolean: Boolean) {
         val prefs = context.getSharedPreferences("cityList", Context.MODE_PRIVATE)
-        prefs.edit {
-            putString(city, "")
+        if (boolean) {
+            prefs.edit {
+                putString(city, "")
+
+            }
+        } else {
+            prefs.edit { remove(city) }
         }
     }
 

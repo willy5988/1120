@@ -74,13 +74,13 @@ fun HomeScreen(
 //        ).also { println(it) }
     }
     val nowDay by remember {
-        mutableStateOf(nowCityWeather.tenDayForecast.first { it ->
+        mutableStateOf(nowCityWeather.tenDayForecast.first {
             LocalDate.now() == LocalDate.parse(it.date)
         })
     }
 
 
-    var nowHour by remember { mutableStateOf<Hour>(Hour("", "", "")) }
+    var nowHour by remember { mutableStateOf(Hour("", "", "")) }
     LaunchedEffect(Unit) {
         while (true) {
             val hour = LocalTime.now().hour
@@ -146,7 +146,7 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         nowCityWeather.hourlyForecast.forEach {
-                            if (nowHour.time == it.time.also { println(it) }) {
+                            if (nowHour.time == it.time) {
 
 
                                 Column(
@@ -202,8 +202,7 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier.padding(10.dp)
                 ) {
-                    Row(
-                    ) {
+                    Row {
                         Icon(
                             painter = painterResource(id = R.drawable.outline_calendar_month_24),
                             null,
@@ -270,10 +269,14 @@ fun HomeScreen(
                                 } else {
                                     Text(
                                         LocalDate.parse(nowCityWeather.tenDayForecast[i].date)
-                                            .toString(),
+                                            .toString().filter { it.isDigit() }
+                                            .takeLast(4).take(2) + "/" + LocalDate.parse(
+                                            nowCityWeather.tenDayForecast[i].date
+                                        )
+                                            .toString().filter { it.isDigit() }.takeLast(2),
                                         color = Color.White
                                     )
-                                    Spacer(Modifier.width(10.dp))
+                                    Spacer(Modifier.width(50.dp))
                                 }
                                 a++
                                 Icon(
@@ -370,6 +373,7 @@ fun HomeScreen(
                                 style = Stroke(width = 20f, cap = StrokeCap.Round)
                             )
                         }
+
                         Canvas(
                             modifier = Modifier.size(150.dp)
                         ) {
@@ -389,6 +393,18 @@ fun HomeScreen(
                                 useCenter = false,
                                 style = Stroke(width = 20f, cap = StrokeCap.Round)
                             )
+                        }
+                        Column {
+                            Spacer(Modifier.weight(1f))
+                            Row {
+                                Spacer(Modifier.weight(.68f))
+                                Text("0", color = Color.White)
+                                Spacer(Modifier.weight(1f))
+                                Text("175", color = Color.White)
+                                Spacer(Modifier.weight(.6f))
+
+                            }
+                            Spacer(Modifier.weight(.5f))
                         }
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
